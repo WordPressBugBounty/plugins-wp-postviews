@@ -3,7 +3,7 @@
 Plugin Name: WP-PostViews
 Plugin URI: https://lesterchan.net/portfolio/programming/php/
 Description: Enables you to display how many times a post/page had been viewed.
-Version: 1.78
+Version: 1.78.1
 Author: Lester 'GaMerZ' Chan
 Author URI: https://lesterchan.net
 Text Domain: wp-postviews
@@ -11,7 +11,7 @@ Text Domain: wp-postviews
 
 
 /*
-	Copyright 2025  Lester Chan  (email : lesterchan@gmail.com)
+	Copyright 2026  Lester Chan  (email : lesterchan@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ Text Domain: wp-postviews
 */
 
 ### WP-PostViews Version
-define( 'WP_POSTVIEWS_VERSION', '1.78' );
+define( 'WP_POSTVIEWS_VERSION', '1.78.1' );
 
 ### Create Text Domain For Translations
 add_action( 'plugins_loaded', 'postviews_textdomain' );
@@ -734,7 +734,7 @@ function postviews_wp_stats() {
 ### Function: Add WP-PostViews General Stats To WP-Stats Page Options
 function postviews_page_admin_general_stats($content) {
 	$stats_display = get_option('stats_display');
-	if ( (int) $stats_display['views'] === 1 ) {
+	if ( (int) ($stats_display['views'] ?? 0) === 1 ) {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_views" value="views" checked="checked" />&nbsp;&nbsp;<label for="wpstats_views">'.__('WP-PostViews', 'wp-postviews').'</label><br />'."\n";
 	} else {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_views" value="views" />&nbsp;&nbsp;<label for="wpstats_views">'.__('WP-PostViews', 'wp-postviews').'</label><br />'."\n";
@@ -747,12 +747,12 @@ function postviews_page_admin_general_stats($content) {
 function postviews_page_admin_most_stats($content) {
 	$stats_display = get_option('stats_display');
 	$stats_mostlimit = (int) get_option('stats_mostlimit');
-	if ( (int) $stats_display['viewed_most_post'] === 1 ) {
+	if ( (int) ($stats_display['viewed_most_post'] ?? 0) === 1 ) {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_viewed_most_post" value="viewed_most_post" checked="checked" />&nbsp;&nbsp;<label for="wpstats_viewed_most_post">'.sprintf(_n('%s Most Viewed Post', '%s Most Viewed Posts', $stats_mostlimit, 'wp-postviews'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
 	} else {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_viewed_most_post" value="viewed_most_post" />&nbsp;&nbsp;<label for="wpstats_viewed_most_post">'.sprintf(_n('%s Most Viewed Post', '%s Most Viewed Posts', $stats_mostlimit, 'wp-postviews'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
 	}
-	if ( (int) $stats_display['viewed_most_page'] === 1 ) {
+	if ( (int) ($stats_display['viewed_most_page'] ?? 0) === 1 ) {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_viewed_most_page" value="viewed_most_page" checked="checked" />&nbsp;&nbsp;<label for="wpstats_viewed_most_page">'.sprintf(_n('%s Most Viewed Page', '%s Most Viewed Pages', $stats_mostlimit, 'wp-postviews'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
 	} else {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_viewed_most_page" value="viewed_most_page" />&nbsp;&nbsp;<label for="wpstats_viewed_most_page">'.sprintf(_n('%s Most Viewed Page', '%s Most Viewed Pages', $stats_mostlimit, 'wp-postviews'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
@@ -764,7 +764,7 @@ function postviews_page_admin_most_stats($content) {
 ### Function: Add WP-PostViews General Stats To WP-Stats Page
 function postviews_page_general_stats($content) {
 	$stats_display = get_option('stats_display');
-	if ( (int) $stats_display['views'] === 1 ) {
+	if ( (int) ($stats_display['views'] ?? 0) === 1 ) {
 		$content .= '<p><strong>'.__('WP-PostViews', 'wp-postviews').'</strong></p>'."\n";
 		$content .= '<ul>'."\n";
 		$content .= '<li>'.sprintf(_n('<strong>%s</strong> view was generated.', '<strong>%s</strong> views were generated.', get_totalviews(false), 'wp-postviews'), number_format_i18n(get_totalviews(false))).'</li>'."\n";
@@ -778,13 +778,13 @@ function postviews_page_general_stats($content) {
 function postviews_page_most_stats($content) {
 	$stats_display = get_option('stats_display');
 	$stats_mostlimit = (int) get_option('stats_mostlimit');
-	if ( (int) $stats_display['viewed_most_post'] === 1 ) {
+	if ( (int) ($stats_display['viewed_most_post'] ?? 0) === 1 ) {
 		$content .= '<p><strong>'.sprintf(_n('%s Most Viewed Post', '%s Most Viewed Posts', $stats_mostlimit, 'wp-postviews'), number_format_i18n($stats_mostlimit)).'</strong></p>'."\n";
 		$content .= '<ul>'."\n";
 		$content .= get_most_viewed('post', $stats_mostlimit, 0, false);
 		$content .= '</ul>'."\n";
 	}
-	if($stats_display['viewed_most_page'] == 1) {
+	if(($stats_display['viewed_most_page'] ?? 0) == 1) {
 		$content .= '<p><strong>'.sprintf(_n('%s Most Viewed Page', '%s Most Viewed Pages', $stats_mostlimit, 'wp-postviews'), number_format_i18n($stats_mostlimit)).'</strong></p>'."\n";
 		$content .= '<ul>'."\n";
 		$content .= get_most_viewed('page', $stats_mostlimit, 0, false);
