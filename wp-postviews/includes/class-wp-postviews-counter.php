@@ -18,6 +18,16 @@ defined( 'ABSPATH' ) || exit;
 class WP_PostViews_Counter {
 
 	/**
+	 * Nonce action for the counting endpoint.
+	 *
+	 * For a logged out visitor it is derived from a shared anonymous session,
+	 * so anyone can mint one; see ajax_increment() for what checking it buys.
+	 *
+	 * @since 2.0.0
+	 */
+	const AJAX_NONCE = 'wp_postviews_nonce';
+
+	/**
 	 * Hook registration.
 	 *
 	 * @return void
@@ -259,7 +269,7 @@ class WP_PostViews_Counter {
 			'wpPostViewsL10n',
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'wp_postviews_nonce' ),
+				'nonce'   => wp_create_nonce( self::AJAX_NONCE ),
 				'postId'  => (int) $post->ID,
 			)
 		);
@@ -277,7 +287,7 @@ class WP_PostViews_Counter {
 	 * @return void
 	 */
 	public static function ajax_increment() {
-		check_ajax_referer( 'wp_postviews_nonce', 'nonce' );
+		check_ajax_referer( self::AJAX_NONCE, '_ajax_nonce' );
 
 		if ( ! self::using_ajax() ) {
 			return;
@@ -291,7 +301,7 @@ class WP_PostViews_Counter {
 
 		$post_views = self::record( $post_id );
 
-		if ( null === $post_views ) {
+		if ( ! is_int( $post_views ) ) {
 			return;
 		}
 
@@ -309,7 +319,9 @@ class WP_PostViews_Counter {
 	 * grow wp_postmeta without bound.
 	 *
 	 * @param int $post_id Post that was viewed.
-	 * @return int|null The new count, or null when the id names no post.
+	 * @return int|false|null The new count, false when the count setting
+	 *                        excludes this visitor, or null when the id names
+	 *                        no viewable post.
 	 */
 	public static function record( $post_id ) {
 		$post_id = (int) $post_id;
@@ -340,6 +352,16 @@ class WP_PostViews_Counter {
 
 		if ( 'auto-draft' === $post->post_status || ! is_post_publicly_viewable( $post ) ) {
 			return null;
+		}
+
+		/*
+		 * The wp_head path asks should_count() before incrementing, and this
+		 * door must ask the same question: enqueue() asks it too, but its
+		 * answer is baked into the cached page by whoever primed the cache, so
+		 * a guest's POST counted under Registered Users Only.
+		 */
+		if ( ! self::should_count( $post_id ) ) {
+			return false;
 		}
 
 		return self::increment( $post_id, 'wp_postviews_increment_views_ajax' );

@@ -94,7 +94,7 @@ class WP_PostViews_API {
 		// script is handed. It is a site-wide nonce rather than a per-post one,
 		// which is what this plugin has always used; narrowing it here would
 		// break the script that already holds the wide one.
-		if ( ! wp_verify_nonce( (string) $request['nonce'], 'wp_postviews_nonce' ) ) {
+		if ( ! wp_verify_nonce( (string) $request['nonce'], WP_PostViews_Counter::AJAX_NONCE ) ) {
 			return new WP_Error(
 				'wp_postviews_bad_nonce',
 				__( 'Failed To Verify Referrer', 'wp-postviews' ),
@@ -113,6 +113,16 @@ class WP_PostViews_API {
 		}
 
 		$views = WP_PostViews_Counter::record( $post_id );
+
+		// A refusal by the Count Views From setting, named as one: a 404 here
+		// would tell a working client the post it is reading does not exist.
+		if ( false === $views ) {
+			return new WP_Error(
+				'wp_postviews_view_not_counted',
+				__( 'This site does not count views from this visitor.', 'wp-postviews' ),
+				array( 'status' => 403 )
+			);
+		}
 
 		if ( null === $views ) {
 			return new WP_Error(

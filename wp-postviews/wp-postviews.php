@@ -3,7 +3,7 @@
  * Plugin Name: WP-PostViews
  * Plugin URI: https://lesterchan.net/portfolio/programming/php/
  * Description: Enables you to display how many times a post/page had been viewed.
- * Version: 2.0.0
+ * Version: 2.0.1
  * Requires at least: 6.8
  * Requires PHP: 8.2
  * Author: Lester 'GaMerZ' Chan
@@ -35,14 +35,12 @@
 */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * WP-PostViews version. Compared against the 'plugin' marker in wp_postviews_version.
  */
-define( 'WP_POSTVIEWS_VERSION', '2.0.0' );
+define( 'WP_POSTVIEWS_VERSION', '2.0.1' );
 
 /**
  * Schema counter. Compared against the 'db' marker in wp_postviews_version.
@@ -86,60 +84,7 @@ require_once WP_POSTVIEWS_DIR . 'includes/class-wp-postviews-widget.php';
 require_once WP_POSTVIEWS_DIR . 'includes/class-wp-postviews-admin.php';
 require_once WP_POSTVIEWS_DIR . 'includes/class-wp-postviews-settings.php';
 require_once WP_POSTVIEWS_DIR . 'includes/class-wp-postviews-wpstats.php';
+require_once WP_POSTVIEWS_DIR . 'includes/class-wp-postviews.php';
 require_once WP_POSTVIEWS_DIR . 'includes/template-tags.php';
 
-WP_PostViews_Options::init();
-WP_PostViews_Display::init();
-WP_PostViews_Counter::init();
-WP_PostViews_Blocks::init();
-WP_PostViews_Core::init();
-new WP_PostViews_API();
-WP_PostViews_Core::register_command();
-WP_PostViews_Admin::init();
-WP_PostViews_Settings::init();
-
-// Loaded and initialised unconditionally. WP-Stats may not be installed, in
-// which case nothing fires wp_stats_sections and this is inert - there is no
-// class_exists() probing between the two plugins.
-WP_PostViews_WPStats::init();
-
-add_action(
-	'widgets_init',
-	function () {
-		register_widget( 'WP_PostViews_Widget' );
-	}
-);
-
-// register_activation_hook() has to be called while the plugin file is being
-// loaded, which is why this is here rather than inside a class initialiser.
-register_activation_hook( __FILE__, 'wp_postviews_activate' );
-
-/**
- * Seed the options row, on this site or across the network.
- *
- * @param bool $network_wide Whether the plugin is being activated network wide.
- * @return void
- */
-function wp_postviews_activate( $network_wide ) {
-	if ( is_multisite() && $network_wide ) {
-		// get_sites(), not the wp_get_sites() this used to call: that one has
-		// been deprecated since WP 4.6 and returns only the first 100 sites.
-		// 'number' => 0 lifts WP_Site_Query's own default cap of 100 too.
-		$site_ids = get_sites(
-			array(
-				'fields' => 'ids',
-				'number' => 0,
-			)
-		);
-
-		foreach ( $site_ids as $site_id ) {
-			switch_to_blog( (int) $site_id );
-			WP_PostViews_Options::install();
-			restore_current_blog();
-		}
-
-		return;
-	}
-
-	WP_PostViews_Options::install();
-}
+WP_PostViews::init();

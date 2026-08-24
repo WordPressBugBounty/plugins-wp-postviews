@@ -3,8 +3,8 @@ Contributors: GamerZ
 Donate link: https://lesterchan.net/site/donation/  
 Tags: views, hits, counter, postviews, statistics  
 Requires at least: 6.8  
-Tested up to: 7.0  
-Stable tag: 2.0.0  
+Tested up to: 7.1  
+Stable tag: 2.0.1  
 Requires PHP: 8.2  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -212,6 +212,16 @@ Purge the cache to use the updated pages.
 You can obtain the number of post views by adding `views` to your `_fields` parameter:
 `/wp/v2/posts?_fields=views,title`
 
+### Can The Settings Screen Be Handed To Another Role?
+The screen requires `manage_options`. The `wp_postviews_capability` filter is read
+wherever that gate is checked, so a different capability opens it to whoever holds one:
+
+~~~
+add_filter( 'wp_postviews_capability', function () {
+	return 'edit_others_posts';
+} );
+~~~
+
 ## Screenshots
 
 1. Settings -> WP-PostViews, which chooses whose views are counted and how they are recorded
@@ -220,6 +230,11 @@ You can obtain the number of post views by adding `views` to your `_fields` para
 4. The Most Viewed widget
 
 ## Changelog
+
+### 2.0.1
+* NEW: A Settings link on the plugin's row on the Plugins screen
+* FIXED: "Count Views From" was only honoured while the page rendered. On a cached site the counting happens through a separate AJAX or REST call instead, and that path never asked the setting — so with "Registered Users Only" a guest hitting a cached page was still counted, and the bot exclusion never applied there either. Both endpoints now check the setting against the actual visitor's login state
+
 ### 2.0.0
 * FIXED: The two templates are echoed as markup on the strength of being `wp_kses_post()`'d when saved — and that was true only of the settings screen. The 2.0.0 migration writes through a different door, and the row it folds in comes from a release that stored the field with no filtering at all, so a hostile template on a site upgrading from 1.78.1 was carried across verbatim and echoed to every visitor. The filtering now happens where the row is written, so WP-CLI, cron, a restored backup and another plugin all pass through it too
 * FIXED: The deferred counting endpoint checked only that an ID named *something*, and every row in `wp_posts` answers to that — revisions, autosaves, auto-drafts, attachments, trashed posts, drafts, menu items, reusable blocks. An unauthenticated caller could walk the ID space writing a view row against each one, and read back the count of unpublished posts while doing it. It now requires a real, publicly viewable post, which is what the other counting path already knew
@@ -227,7 +242,7 @@ You can obtain the number of post views by adding `views` to your `_fields` para
 * NEW: An editor block, **Post Views**, under Widgets. It renders on the server through the same code the shortcode uses, so a block and a shortcode showing the same post produce the same markup, and previewing it in the editor never counts a view. The `[views]` shortcode is unchanged and still supported — nothing needs converting, and posts already containing it keep working.
 * NEW: A `wp postviews` WP-CLI command — `list` and `get`. It reads and never writes.
 * NEW: A `postviews/v1` REST API carrying one route, for counting a view from a cached page. Reading a count is already a `views` field on the core post resource. The `admin-ajax.php` `wp_postviews` action is unchanged and still supported.
-* BREAKING: Requires WordPress 6.8 and PHP 8.2, up from 6.0 and 7.4.
+* BREAKING: Requires WordPress 6.8 and PHP 8.2.
 * BREAKING: The `the_views` filter is now `wp_postviews_the_views`. The template tag `the_views()` is unchanged.
 * BREAKING: The `postviews_should_count` filter is now `wp_postviews_should_count`.
 * BREAKING: The `postviews_increment_views` and `postviews_increment_views_ajax` actions are now `wp_postviews_increment_views` and `wp_postviews_increment_views_ajax`.

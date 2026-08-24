@@ -10,6 +10,8 @@
  * this file, which every plugin update then overwrote.
  */
 ( function() {
+	'use strict';
+
 	fetch( wpPostViewsL10n.ajaxUrl, {
 		method: 'POST',
 		credentials: 'same-origin',
@@ -19,7 +21,7 @@
 		},
 		body: new URLSearchParams( {
 			action: 'wp_postviews',
-			nonce: wpPostViewsL10n.nonce,
+			_ajax_nonce: wpPostViewsL10n.nonce,
 			postviews_id: wpPostViewsL10n.postId,
 		} ),
 	} )
